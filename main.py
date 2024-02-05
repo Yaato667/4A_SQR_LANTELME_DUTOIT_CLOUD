@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify, abort
+import redis
 import math
 
 app = Flask(__name__)
 
-# Liste pour stocker les résultats
-resultats = []
+# Connexion à Redis sur localhost
+redis_conn = redis.Redis()
 
 # Fonction pour effectuer le calcul
 def effectuer_calcul(operation, nb1, nb2):
@@ -32,10 +33,9 @@ def addition():
         abort(400, "Valeurs manquantes")
 
     resultat = effectuer_calcul("addition", nb1, nb2)
-    id_resultat = len(resultats) + 1
-    resultats.append(resultat)
+    redis_conn.set("addition_resultat", resultat)
 
-    return jsonify({"id": id_resultat})
+    return jsonify({"resultat": resultat})
 
 # Route pour soustraire deux nombres
 @app.route('/api/soustraction', methods=['POST'])
@@ -48,10 +48,9 @@ def soustraction():
         abort(400, "Valeurs manquantes")
 
     resultat = effectuer_calcul("soustraction", nb1, nb2)
-    id_resultat = len(resultats) + 1
-    resultats.append(resultat)
+    redis_conn.set("soustraction_resultat", resultat)
 
-    return jsonify({"id": id_resultat})
+    return jsonify({"resultat": resultat})
 
 # Route pour multiplier deux nombres
 @app.route('/api/multiplication', methods=['POST'])
@@ -64,10 +63,9 @@ def multiplication():
         abort(400, "Valeurs manquantes")
 
     resultat = effectuer_calcul("multiplication", nb1, nb2)
-    id_resultat = len(resultats) + 1
-    resultats.append(resultat)
+    redis_conn.set("multiplication_resultat", resultat)
 
-    return jsonify({"id": id_resultat})
+    return jsonify({"resultat": resultat})
 
 # Route pour diviser deux nombres
 @app.route('/api/division', methods=['POST'])
@@ -80,18 +78,27 @@ def division():
         abort(400, "Valeurs manquantes")
 
     resultat = effectuer_calcul("division", nb1, nb2)
-    id_resultat = len(resultats) + 1
-    resultats.append(resultat)
+    redis_conn.set("division_resultat", resultat)
 
-    return jsonify({"id": id_resultat})
+    return jsonify({"resultat": resultat})
 
 # Route pour récupérer le résultat d'un calcul
 @app.route('/api/result/<int:id_resultat>', methods=['GET'])
 def get_resultat(id_resultat):
-    if id_resultat <= 0 or id_resultat > len(resultats):
-        abort(404, "Résultat introuvable")
+    if id_resultat <= 0:
+        abort(400, "ID invalide")
 
-    resultat = resultats[id_resultat - 1]
+    # Vérifier si le résultat est déjà stocké dans Redis
+    resultat_str = redis_conn.get("resultat_" + str(id_resultat))
+
+    # Si le résultat est trouvé dans Redis, le décoder et le retourner
+    if resultat_str:
+        return jsonify({"resultat": int(resultat_str)})
+
+    # Si le résultat n'est pas trouvé dans Redis, le calculer et le stocker
+    resultat = effectuer_calcul(operation, nb1, nb2)
+    redis_conn.set("resultat_" + str(id_resultat), resultat)
+
     return jsonify({"resultat": resultat})
 
 if __name__ == '__main__':
