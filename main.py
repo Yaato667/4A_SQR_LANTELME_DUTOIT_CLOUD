@@ -1,152 +1,98 @@
 from flask import Flask, request, jsonify, abort
-from datetime import datetime
-import csv
-import sys
+import math
 
-# Création de l'appli Flask
 app = Flask(__name__)
 
-# Liste pour stocker les évents
-events = []
+# Liste pour stocker les résultats
+resultats = []
 
-# Creation de event avec POST
-@app.route('/events', methods=['POST'])
-def create_event():
-    # Récupération des données JSON de la requête
+# Fonction pour effectuer le calcul
+def effectuer_calcul(operation, nb1, nb2):
+    if operation == "addition":
+        return nb1 + nb2
+    elif operation == "soustraction":
+        return nb1 - nb2
+    elif operation == "multiplication":
+        return nb1 * nb2
+    elif operation == "division":
+        if nb2 == 0:
+            abort(400, "Division par zéro impossible")
+        return nb1 / nb2
+    else:
+        abort(400, "Opération inconnue")
+
+# Route pour additionner deux nombres
+@app.route('/api/addition', methods=['POST'])
+def addition():
     data = request.get_json()
+    nb1 = data.get("nb1")
+    nb2 = data.get("nb2")
 
-    # Création d'un dico 
-    event = {
-        'T1': data.get('T1'),
-        't': data.get('t'),
-        'p': data.get('p'),
-        'n': data.get('n')
-    }
+    if not nb1 or not nb2:
+        abort(400, "Valeurs manquantes")
 
-    # Ajout à la liste
-    events.append(event)
+    resultat = effectuer_calcul("addition", nb1, nb2)
+    id_resultat = len(resultats) + 1
+    resultats.append(resultat)
 
-    # Succès
-    return 'Événement ajouté, bien joué', 201
+    return jsonify({"id": id_resultat})
 
-# Afficher une liste de tous les événements dans l’ordre chronologique
-@app.route('/events', methods=['GET'])
-def get_all_events():
-    # Trie la liste des évènements en utilisant la fonction sort_by_timestamp comme clé de tri
-    sorted_events = sorted(events, key=sort_by_timestamp)
-    # Retourne un dictionnaire JSON contenant la liste triée des évènements
-    return jsonify({'events': sorted_events})
+# Route pour soustraire deux nombres
+@app.route('/api/soustraction', methods=['POST'])
+def soustraction():
+    data = request.get_json()
+    nb1 = data.get("nb1")
+    nb2 = data.get("nb2")
 
-# Fonction auxiliaire pour définir la clé de tri par timestamp
-def sort_by_timestamp(event):
-    # Extrait la valeur associée à la clé 'T1' de l'évènement
-    timestamp_str = event.get('T1')
+    if not nb1 or not nb2:
+        abort(400, "Valeurs manquantes")
 
-    # Vérifie si la valeur est présente et non vide
-    if timestamp_str:
-        # Convertit la chaîne d'heure en objet de temps
-        return datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S')
-    else:
-        # Si la valeur est manquante ou vide, retourne une date minimale
-        return datetime.min
+    resultat = effectuer_calcul("soustraction", nb1, nb2)
+    id_resultat = len(resultats) + 1
+    resultats.append(resultat)
 
-# E3 - Afficher une liste de tous les évènements dans l’ordre chronologique liées à une personne
+    return jsonify({"id": id_resultat})
 
-# Fonction de tri par date pour les événements
-def sort_events_by_date(event):
-    return datetime.strptime(event.get('T1', ''), '%Y-%m-%dT%H:%M:%S')
+# Route pour multiplier deux nombres
+@app.route('/api/multiplication', methods=['POST'])
+def multiplication():
+    data = request.get_json()
+    nb1 = data.get("nb1")
+    nb2 = data.get("nb2")
 
-# Route API pour récupérer les événements liés à une personne dans le bon ordre
-@app.route("/events/person/<person_name>", methods=['GET'])
-def get_events_by_person(person_name):
-    # Filtrer pour chaque personne
-    person_events = [event for event in events if person_name in event.get('p', [])]
+    if not nb1 or not nb2:
+        abort(400, "Valeurs manquantes")
 
-    # Trier par date quand même
-    sorted_person_events = sorted(person_events, key=sort_events_by_date)
+    resultat = effectuer_calcul("multiplication", nb1, nb2)
+    id_resultat = len(resultats) + 1
+    resultats.append(resultat)
 
-    return jsonify({'events': sorted_person_events})
+    return jsonify({"id": id_resultat})
 
-# Endpoint pour ajouter un participant à un évènement spécifié par son ID
-@app.route('/events/<event_name>/add-participant', methods=['POST'])
-def add_participant_by_name(event_name):
-    # Recherche de l'évènement correspondant au nom dans la liste des évènements
-    event = next((event for event in events if event.get('n') == event_name), None)
-    
-    # Vérifie si l'évènement a été trouvé
-    if event:
-        # Récupération des données JSON de la requête
-        data = request.get_json()
-        
-        # Ajout du participant à la liste des participants de l'évènement
-        # Si la clé 'p' n'existe pas, elle est créée avec une liste vide comme valeur par défaut
-        event.setdefault('p', []).append(data.get('participant'))
-        
-        # Retourne un message indiquant que le participant a été ajouté avec succès et le code HTTP 200 (OK)
-        return 'Participant ajouté avec succès à l\'événement "{}" !'.format(event_name), 200
-    else:
-        # Si l'évènement n'est pas trouvé, retourne une erreur 404 avec un message correspondant
-        abort(404, 'Évènement "{}" non trouvé')
+# Route pour diviser deux nombres
+@app.route('/api/division', methods=['POST'])
+def division():
+    data = request.get_json()
+    nb1 = data.get("nb1")
+    nb2 = data.get("nb2")
 
-# Route pour obtenir les détails du prochain cours en fonction de l'heure actuelle
-@app.route('/events/next-course', methods=['GET'])
-def get_next_course():
-    if events:
-        # Récupérer l'heure actuelle
-        current_time = datetime.now()
-        print("Heure actuelle:", current_time)
-        
-        # Filtrer les événements à venir (après ou à l'heure actuelle)
-        upcoming_events = [event for event in events if sort_by_timestamp(event) >= current_time]
-        print("Événements à venir:", upcoming_events)
-        
-        if upcoming_events:
-            # Trouver l'événement avec le timestamp minimum 
-            next_course = min(upcoming_events, key=sort_by_timestamp)
-            print("Prochain cours:", next_course)
-            return jsonify({'next_course': next_course})
-        else:
-            # Retourner une erreur 404 s'il n'y a aucun événement à venir
-            abort(404, 'Aucun évènement à venir')
-    else:
-        # Retourner une erreur 404 s'il n'y a aucun événement disponible
-        abort(404, 'Aucun évènement trouvé')
+    if not nb1 or not nb2:
+        abort(400, "Valeurs manquantes")
 
-# Route pour télécharger des événements depuis un fichier CSV
-@app.route('/uploadevents', methods=['POST'])
-def upload_events():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+    resultat = effectuer_calcul("division", nb1, nb2)
+    id_resultat = len(resultats) + 1
+    resultats.append(resultat)
 
-    file = request.files['file']
-    
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
+    return jsonify({"id": id_resultat})
 
-    # Lecture du fichier CSV
-    csv_data = file.read().decode('utf-8').splitlines()
-    csv_reader = csv.DictReader(csv_data)
+# Route pour récupérer le résultat d'un calcul
+@app.route('/api/result/<int:id_resultat>', methods=['GET'])
+def get_resultat(id_resultat):
+    if id_resultat <= 0 or id_resultat > len(resultats):
+        abort(404, "Résultat introuvable")
 
-    for row in csv_reader:
-        timestamp = row.get('timestamp')
-        event_name = row.get('event_name')
-        attendees = row.get('attendees')
-        time = row.get('atime')
-        
-        # Ajout de vérification pour éviter la conversion avec une valeur None
-        if timestamp:
-            events.append({'T1': timestamp, 'n': event_name, 'p': attendees, 't': time})
-
-    return jsonify({'message': 'File uploaded successfully'}), 201
+    resultat = resultats[id_resultat - 1]
+    return jsonify({"resultat": resultat})
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "check_syntax":
-            print("Build [ OK ]")
-            exit(0)
-        else:
-            print("L'argument fourni n'est pas pris en charge ! Argument pris en charge : check_syntax")
-            exit(1)
     app.run(debug=True)
-
-
