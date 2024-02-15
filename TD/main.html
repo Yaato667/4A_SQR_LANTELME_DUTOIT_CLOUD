@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculatrice API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input, select, button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculatrice API</h1>
+    <form id="calculatorForm">
+        <label for="nb1">Nombre 1:</label>
+        <input type="number" id="nb1" name="nb1" required>
+        <br>
+        <label for="nb2">Nombre 2:</label>
+        <input type="number" id="nb2" name="nb2" required>
+        <br>
+        <label for="operation">Opération:</label>
+        <select id="operation" name="operation" required>
+            <option value="addition">Addition</option>
+            <option value="soustraction">Soustraction</option>
+            <option value="multiplication">Multiplication</option>
+            <option value="division">Division</option>
+        </select>
+        <br>
+        <button type="button" onclick="sendRequest()">Calculer</button>
+    </form>
+
+    <div id="resultContainer"></div>
+
+    <script>
+        function sendRequest() {
+            const nb1 = document.getElementById('nb1').value;
+            const nb2 = document.getElementById('nb2').value;
+            const operation = document.getElementById('operation').value;
+
+            fetch(`http://localhost:5000/api/${operation}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ nb1, nb2 }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('resultContainer').innerText = `Résultat: ${data.resultat}`;
+            })
+            .catch(error => {
+                console.error('Erreur lors de la requête API:', error);
+                document.getElementById('resultContainer').innerText = 'Erreur lors du calcul.';
+            });
+        }
+    </script>
+</body>
+</html>
