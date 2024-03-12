@@ -3,83 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter API</title>
+    <title>Client API</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Lien vers le fichier CSS -->
+    
 </head>
+<h1>Client API</h1>
 <body>
-    <h1>Twitter API</h1>
-    
-    <h2>Afficher tous les tweets</h2>
-    <button onclick="afficherTousLesTweets()">Afficher</button>
-    <div id="tous-les-tweets"></div>
-    
-    <h2>Afficher les tweets d'un utilisateur</h2>
-    <input type="text" id="username-input" placeholder="Nom d'utilisateur">
-    <button onclick="afficherTweetsUtilisateur()">Afficher</button>
-    <div id="tweets-utilisateur"></div>
-    
-    <h2>Retweeter un tweet</h2>
-    <input type="text" id="retweet-input" placeholder="ID du tweet">
-    <button onclick="retweeterTweet()">Retweeter</button>
-    <div id="retweet-message"></div>
-    
-    <h2>Afficher les sujets</h2>
-    <button onclick="afficherSujets()">Afficher</button>
-    <div id="sujets"></div>
-    
-    <h2>Afficher les tweets liés à un sujet</h2>
-    <input type="text" id="sujet-input" placeholder="Hashtag">
-    <button onclick="afficherTweetsSujet()">Afficher</button>
-    <div id="tweets-sujet"></div>
+    <div class="container">
+        <div class="form-container box">
+        <div class="button-container">
+            
+            <button onclick="afficherTousLesTweets()">Afficher tous les tweets</button>
+            <button onclick="afficherSujets()">Afficher tous les sujets</button>
+        </div>
+    </div>
 
-    <script>
-        function afficherTousLesTweets() {
-            fetch('/tweets')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('tous-les-tweets').innerHTML = JSON.stringify(data);
-            });
-        }
-        
-        function afficherTweetsUtilisateur() {
-            const username = document.getElementById('username-input').value;
-            fetch(`/tweets/${username}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('tweets-utilisateur').innerHTML = JSON.stringify(data);
-            });
-        }
-        
-        function retweeterTweet() {
-            const tweetId = document.getElementById('retweet-input').value;
-            fetch('/tweets/retweet', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ tweet_id: tweetId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('retweet-message').innerHTML = data.message;
-            });
-        }
-        
-        function afficherSujets() {
-            fetch('/sujets')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('sujets').innerHTML = JSON.stringify(data);
-            });
-        }
-        
-        function afficherTweetsSujet() {
-            const hashtag = document.getElementById('sujet-input').value;
-            fetch(`/sujets/${hashtag}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('tweets-sujet').innerHTML = JSON.stringify(data);
-            });
-        }
-    </script>
+        <div>
+            <div class="form-container">
+                <h2>Afficher les tweets d'un utilisateur</h2>
+                <form onsubmit="afficherTweetsUtilisateur(event)">
+                    <label for="username">Nom d'utilisateur :</label>
+                    <input type="text" id="username" name="username" class="form-input">
+                    <button type="submit" class="form-submit-btn">Afficher les tweets</button>
+                </form>
+            </div>
+
+            <div class="form-container">
+                <h2>Afficher les tweets selon un sujet</h2>
+                <form onsubmit="afficherTweetsSujet(event)">
+                    <label for="hashtag">Hashtag :</label><br>
+                    <input type="text" id="hashtag" name="hashtag" class="form-input"><br>
+                    <button type="submit" class="form-submit-btn">Afficher les tweets</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="result-container">
+            <div id="result-container">
+                <!-- Ici seront affichés les résultats -->
+            </div>
+        </div>
+
+        <!-- Formulaire pour ajouter un nouveau tweet -->
+        <div id="nouveau-tweet" class="form-container">
+            <h2>Ajouter un nouveau tweet</h2>
+            <form onsubmit="ajouterNouveauTweet(event)">
+                <label for="tweet-text">Contenu du tweet :</label><br>
+                <textarea id="tweet-text" name="tweet_text" class="form-input" rows="4" cols="50"></textarea><br>
+                
+                <label for="tweet-username">Nom d'utilisateur :</label><br>
+                <input type="text" id="tweet-username" name="username" class="form-input"><br>
+                
+                <label for="tweet-hashtags">Hashtags (séparés par des espaces) :</label><br>
+                <input type="text" id="tweet-hashtags" name="hashtags" class="form-input"><br>
+                
+                <button type="submit" class="form-submit-btn">Ajouter le tweet</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script> 
 </body>
 </html>
