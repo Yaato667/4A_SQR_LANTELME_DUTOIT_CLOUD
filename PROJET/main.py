@@ -39,3 +39,30 @@ def ajouter_tweet():
     enregistrer_tweet(tweet_id, tweet_text, username, hashtags)
     
     return jsonify({'message': f'Tweet {tweet_id} ajouté avec succès'})
+
+@app.route('/tweets', methods=['GET'])
+def afficher_tweets():
+    keys = redis_client.keys('tweet:*')
+    tweets = []
+    for key in keys:
+        tweet_data = redis_client.hgetall(key)
+        tweet = {key.decode('utf-8'): value.decode('utf-8') for key, value in tweet_data.items()}
+        tweet['retweets'] = int(redis_client.hget(key, 'retweet_count') or 0)
+        tweets.append(tweet)
+    return jsonify(tweets)
+
+
+# Fonction pour afficher les tweets liés à une personne
+@app.route('/tweets/<username>', methods=['GET'])
+def afficher_tweets_utilisateur(username):
+    # Utilisation d'une liste en compréhension pour récupérer les tweets de l'utilisateur
+    user_tweets = []
+    for key in redis_client.keys('tweet:*'):  # Parcourir toutes les clés correspondant au motif 'tweet:*'
+        if (username_bytes := redis_client.hget(key, 'username')) is not None:  # Vérifier si le champ 'username' existe
+            decoded_username = username_bytes.decode('utf-8')
+            if decoded_username == username:  # Décoder le champ 'username' et le comparer à l'utilisateur demandé
+                tweet = {k.decode('utf-8'): v.decode('utf-8') for k, v in redis_client.hgetall(key).items()}  # Décodez les clés et les valeurs en bytes en chaînes de caractères
+                # Récupérer le nombre de retweets pour ce tweet
+                tweet['retweets'] = int(redis_client.hget(key, 'retweet_count') or 0)
+                user_tweets.append(tweet)
+    return jsonify(user_tweets)
