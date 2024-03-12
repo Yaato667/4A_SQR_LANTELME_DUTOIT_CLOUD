@@ -1,0 +1,22 @@
+name: Build API
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: CHECKOUT CODE
+      uses: actions/checkout@v3
+
+    - name: SET UP PYTHON
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+        
+    - name: INSTALL FLASK
+      run: pip install flask
