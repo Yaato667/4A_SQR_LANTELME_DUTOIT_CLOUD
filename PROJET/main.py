@@ -110,3 +110,21 @@ def supprimer_tweet(tweet_id):
     tweet_data = redis_client.hgetall(tweet_key)
     if not tweet_data:
         return jsonify({'error': 'Tweet non trouvé'}), 404
+    
+     # Supprimer le tweet
+    redis_client.delete(tweet_key)
+
+    # Récupérer les hashtags associés au tweet
+    hashtags = tweet_data.get(b'hashtags', b'').decode('utf-8').split()
+    
+    # Supprimer le tweet des sujets associés s'il était le dernier tweet du sujet
+    for hashtag in hashtags:
+        sujet_key = f'h-hashtag:{hashtag}'
+        if redis_client.scard(sujet_key) == 1:  # Vérifier si c'était le dernier tweet du sujet
+            redis_client.delete(sujet_key)  # Supprimer le sujet
+
+    return jsonify({'message': f'Tweet {tweet_id} supprimé avec succès'})
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
