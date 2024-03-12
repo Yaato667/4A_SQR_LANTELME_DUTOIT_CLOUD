@@ -66,3 +66,23 @@ def afficher_tweets_utilisateur(username):
                 tweet['retweets'] = int(redis_client.hget(key, 'retweet_count') or 0)
                 user_tweets.append(tweet)
     return jsonify(user_tweets)
+
+
+# Fonction pour retweeter un tweet
+@app.route('/tweets/retweet', methods=['POST'])
+def retweeter_tweet():
+    data = request.json
+    tweet_id = data['tweet_id']
+    # Incrémenter le compteur de retweets
+    redis_client.hincrby(f'tweet:{tweet_id}', 'retweet_count', 1)
+    return jsonify({'message': f'Tweet {tweet_id} retweeté avec succès'})
+
+# Fonction pour afficher les sujets
+@app.route('/sujets', methods=['GET'])
+def afficher_sujets():
+    keys = redis_client.keys('h-hashtag:*')
+    sujets = []
+    for key in keys:
+        sujet = key.decode('utf-8').split(':')[-1]
+        sujets.append(sujet)
+    return jsonify(sujets)
