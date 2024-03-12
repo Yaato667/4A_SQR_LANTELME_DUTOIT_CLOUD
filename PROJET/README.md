@@ -6,4 +6,4 @@
 [Lantelme Tom](https://github.com/Yaato667) 
 
 SQR
-![badge](https://github.com/Aasa21/4A_SQR_LANTELME_DUTOIT_CLOUD/actions/workflows/push.yml/badge.svg)
+![badge](https://github.com/Yaato667/4A_SQR_LANTELME_DUTOIT_CLOUD/actions/workflows/push.yml/badge.svg)
