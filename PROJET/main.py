@@ -86,3 +86,27 @@ def afficher_sujets():
         sujet = key.decode('utf-8').split(':')[-1]
         sujets.append(sujet)
     return jsonify(sujets)
+
+@app.route('/sujets/<hashtag>', methods=['GET'])
+def afficher_tweets_sujet(hashtag):
+    hashtag_encoded = quote_plus(hashtag)
+    keys = redis_client.smembers(f'h-hashtag:{hashtag_encoded}')
+    if not keys:
+        return jsonify({'message': f'Aucun tweet associé au sujet {hashtag}'})
+    
+    sujet_tweets = []
+    for key in keys:
+        tweet_data = redis_client.hgetall(key)
+        tweet = {key.decode('utf-8'): value.decode('utf-8') for key, value in tweet_data.items()}
+        tweet['retweets'] = int(redis_client.hget(key, 'retweet_count') or 0)
+        sujet_tweets.append(tweet)
+    
+    return jsonify(sujet_tweets)
+
+# Fonction pour supprimer un tweet
+@app.route('/tweets/<tweet_id>', methods=['DELETE'])
+def supprimer_tweet(tweet_id):
+    tweet_key = f'tweet:{tweet_id}'
+    tweet_data = redis_client.hgetall(tweet_key)
+    if not tweet_data:
+        return jsonify({'error': 'Tweet non trouvé'}), 404
