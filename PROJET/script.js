@@ -81,3 +81,72 @@ function afficherResultat(data) {
     }
 }
 
+
+// Fonction pour supprimer un tweet
+function supprimerTweet(tweetId) {
+    fetch(`http://localhost:5000/tweets/${tweetId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message); // Affiche un message indiquant que le tweet a été supprimé
+        afficherTousLesTweets(); // Rafraîchit la liste des tweets après la suppression
+    })
+    .catch(error => console.error('Erreur lors de la suppression du tweet:', error));
+}
+
+
+// Fonction pour retweeter un tweet
+function retweeterTweet(tweetId) {
+    fetch('http://localhost:5000/tweets/retweet', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tweet_id: tweetId })
+    })
+    .then(response => response.json())
+    .then(data => afficherResultat(data))
+    .catch(error => console.error('Erreur lors du retweet:', error));
+}
+
+// Fonction pour ajouter un nouveau tweet
+function ajouterNouveauTweet(event) {
+    event.preventDefault();
+
+    // Récupérer les valeurs des champs du formulaire
+    const tweetText = document.getElementById('tweet-text').value;
+    const username = document.getElementById('tweet-username').value;
+    const hashtags = document.getElementById('tweet-hashtags').value.split(' '); // Diviser les hashtags en une liste
+
+    // Générer un ID unique pour le tweet (peut être remplacé par un système plus robuste)
+    const tweetId = Math.floor(Math.random() * 1000000);
+
+    // Créer l'objet JSON contenant les données du tweet
+    const tweetData = {
+        tweet_id: tweetId,
+        tweet_text: tweetText,
+        username: username,
+        hashtags: hashtags
+    };
+
+    // Effectuer une requête POST pour ajouter le tweet
+    fetch('http://localhost:5000/tweets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tweetData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Afficher un message indiquant que le tweet a été ajouté avec succès
+        alert(data.message);
+
+        // Effacer les champs du formulaire après l'ajout du tweet
+        document.getElementById('tweet-text').value = '';
+        document.getElementById('tweet-username').value = '';
+        document.getElementById('tweet-hashtags').value = '';
+    })
+    .catch(error => console.error('Erreur lors de l\'ajout du tweet:', error));
+}
